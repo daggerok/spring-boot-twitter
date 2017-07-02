@@ -1,4 +1,8 @@
-= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=twitter-api-gateway["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=master["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+
+== added all backing- and micro- services into sinle docker-compose
+
+see: `./twitter-docker/twitter-docker-services/src/docker-compose.yml`
 
 this repo demonstrate, how to retrieve data using twitter API
 
