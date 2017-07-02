@@ -1,0 +1,5 @@
+dependencies {
+  compile project(':modules:props-module'),
+      project(':modules:twitter-domain-module'),
+      'org.springframework.boot:spring-boot-starter-web'
+}

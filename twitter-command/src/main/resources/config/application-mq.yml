@@ -1,0 +1,12 @@
+spring:
+  rabbitmq:
+    host: ${mq.server.host}
+    port: ${mq.server.port}
+    username: ${mq.server.user}
+    password: ${mq.server.pass}
+  cloud:
+    stream:
+      bindings:
+        output:
+          content-type: application/json
+          destination: ${mq.output.destination}

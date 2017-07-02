@@ -1,0 +1,25 @@
+version: "2.1"
+services:
+  pg_sql_db:
+    image: healthcheck/postgres:alpine
+    volumes: ["pg_sql_db_data_volume:/var/lib/postgresql/data:rw"]
+    networks: [backing_services]
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: twitter
+      POSTGRES_USER: twitter
+      POSTGRES_PASSWORD: twitter
+  rabbit_mq:
+    image: rabbitmq:3.6.6-alpine
+    volumes: ["rabbit_mq_data_volume:/var/lib/rabbitmq:rw"]
+    networks: [backing_services]
+    ports: ["5672:5672"]
+    environment:
+      RABBITMQ_DEFAULT_USER: twitter
+      RABBITMQ_DEFAULT_PASS: twitter
+volumes:
+  pg_sql_db_data_volume: {}
+  rabbit_mq_data_volume: {}
+networks:
+  backing_services:
+    driver: bridge

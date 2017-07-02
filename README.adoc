@@ -1,0 +1,63 @@
+= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=master["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+
+this is repo containing (async `RabbitMQ messaging` and sync `REST` microservices) data models processing:
+
+. main idea here is: each microservice doing single simple job, but doing it well, efficient and fast
+. actor 1: `twitter-data` - single service which is listenning creation entity command (event) and store input data into RDBMS (Postgre SQL)
+. actor 2: scalable `twitter-commander` service, which is send async tweets creation commands
+. actor 3: scalable `twitter-query` service, which is only reading tweets from read-only datasorce. in production systems should be moved out from operational RDBMS to some nosql scalable / replicateble solution, such mongodb, or any other more siutable for you
+. in addition: common reusable subprojects, such domain and entity api...
+. important keywords:
+  - CQRS, event sourcing
+  - reactive streams, event-driven architecture
+  - messaging pipelines, non-blocking data processing
+
+== reads (can be improoved by spring 5 reactive programming model using Mono / Flux)
+
+[source]
+----
+[client] <-> (http get) <-> [twitter-query] <-> (jdbc select) <-> [rdbms]
+
+# with webflux and reactive data-source could also be non blocking:
+[client] <~> (http get sse) <~> [twitter-query (webflux)] <~> (reactive flux) <~> [mongo]
+----
+
+== writes (also can be improved by replacing rdbms solution with some siutable reactive nosql)
+
+[source]
+----
+[client] -> (http post) -> [twitter-command] ~> (send async) ~> [twitter-data] <-> (jdbc insert) <-> [rdbms]
+----
+
+note:
+
+. `\<\->` - sync processing
+. `<~>` - async processing
+
+== quick start
+
+[source,bash]
+----
+gradle --parallel bootRun
+
+http post :8881 data=test-tweet1
+http post :8881 data=test-tweet2
+
+http get :8882
+
+gradle --stop
+----
+
+== stack:
+
+. spring-boot
+. spring-data
+. spring-cloud-stream
+. RabbitMQ
+. Postgres
+. docker (docker-compose)
+. gradle
+. install spring app as linux service
+. CQRS and Event Sourcing
+. event-driven architecture
+. reactive streams, non-blocking data processing

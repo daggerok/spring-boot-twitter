@@ -1,0 +1,25 @@
+rootProject.name = 'twitter'
+include 'modules:twitter-domain-module:twitter-entity-module'
+
+def modules = 'modules'
+file(modules).listFiles().findAll({ it.isDirectory() && it.name.contains('module') }).each {
+  include ":$modules:$it.name"
+}
+
+/*
+def modulesFilter = new FileFilter() {
+  @Override boolean accept(final File pathname) {
+    return pathname.isDirectory() && pathname.name.startsWith(rootProject.name)
+  }
+}
+
+rootProject.projectDir.listFiles(modulesFilter).each { File subProjectDir ->
+  include subProjectDir.name
+}
+*/
+
+def twitterModules = rootProject.projectDir.listFiles({ File file ->
+  file.isDirectory() && file.name.startsWith(rootProject.name)
+} as FileFilter)
+
+twitterModules.each { include(it.name) }

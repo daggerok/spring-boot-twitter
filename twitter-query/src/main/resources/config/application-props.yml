@@ -1,0 +1,8 @@
+db:
+  name: ${DB_NAME:twitter}
+  server:
+    type: ${DB_SERVER_TYPE:postgresql}
+    host: ${DB_SERVER_HOST:localhost}
+    port: ${DB_SERVER_PORT:5432}
+    user: ${DB_SERVER_USER:twitter}
+    pass: ${DB_SERVER_PASS:twitter}

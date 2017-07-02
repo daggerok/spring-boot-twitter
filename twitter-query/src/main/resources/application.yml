@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: twitter-query
+  profiles:
+    include: >
+      server,
+      props,
+      db

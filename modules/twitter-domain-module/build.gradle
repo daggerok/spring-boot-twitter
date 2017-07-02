@@ -1,0 +1,7 @@
+dependencies {
+  compile project(':modules:twitter-domain-module:twitter-entity-module'),
+      "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion",
+      'org.hibernate:hibernate-java8'
+  compileOnly("org.projectlombok:lombok:$lombokVersion")
+  runtime('org.postgresql:postgresql')
+}

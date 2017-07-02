@@ -1,0 +1,59 @@
+group: edge
+dist: trusty
+language: java
+jdk: oraclejdk8
+install: true
+before_install:
+  # install docker-compose
+  - sudo apt update
+  - sudo apt install -y python-pip curl jq libxml2-utils
+  - sudo pip install docker-compose
+  - sudo usermod -aG docker $(whoami)
+  # kill whatever punning on postgres / rabbitmq port
+  - sudo kill $(sudo lsof -t -i:5432) | true
+  - sudo kill $(sudo lsof -t -i:5672) | true
+script:
+  - docker-compose -f twitter-docker/src/docker-compose.yml up -d --build
+  - docker-compose -f twitter-docker/src/docker-compose.yml down -v
+  - gradle clean build
+  - gradle composeUp
+  # twitter apps as linux system services
+  - sudo mkdir -p /var/twitter-{command,data,query}-app
+  - sudo mv -f twitter-command/build/libs/*.jar /var/twitter-command-app/twitter-command-app.jar
+  - sudo mv -f twitter-data/build/libs/*.jar    /var/twitter-data-app/twitter-data-app.jar
+  - sudo mv -f twitter-query/build/libs/*.jar   /var/twitter-query-app/twitter-query-app.jar
+  - sudo ln -s /var/twitter-command-app/twitter-command-app.jar /etc/init.d/twitter-command-app
+  - sudo ln -s /var/twitter-data-app/twitter-data-app.jar       /etc/init.d/twitter-data-app
+  - sudo ln -s /var/twitter-query-app/twitter-query-app.jar     /etc/init.d/twitter-query-app
+  - sudo service twitter-data-app start
+  - sleep 15
+  - sudo service twitter-command-app start
+  - sleep 15
+  - sudo service twitter-query-app start
+  - sleep 15
+  - curl -sS http://localhost:8882 | jq
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test1"}'
+  - sleep 1
+  - curl -sS http://localhost:8882 | jq
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test2"}'
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test3"}'
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test4"}'
+  - sleep 1
+  - curl -sS http://localhost:8882 | jq
+  - sudo service twitter-query-app stop
+  - sudo service twitter-data-app stop
+  - sudo service twitter-command-app stop
+  - gradle composeDown
+  # twitter apps as linux system services
+  - gradle --parallel bootRun &
+  - sleep 90
+before_cache:
+  - gradle composeDown
+  - gradle --stop
+  - rm -rf $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.m2/
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/

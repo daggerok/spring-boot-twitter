@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:${db.server.type}://${db.server.host}:${db.server.port}/${db.name}
+    username: ${db.server.user}
+    password: ${db.server.pass}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    database: ${db.server.type}

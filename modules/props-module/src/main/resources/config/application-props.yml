@@ -1,0 +1,19 @@
+db:
+  name: ${DB_NAME:twitter}
+  server:
+    type: ${DB_SERVER_TYPE:postgresql}
+    host: ${DB_SERVER_HOST:localhost}
+    port: ${DB_SERVER_PORT:5432}
+    user: ${DB_SERVER_USER:twitter}
+    pass: ${DB_SERVER_PASS:twitter}
+mq:
+  input:
+    destination: ${MQ_INPUT_DESTINATION:twitter}
+  output:
+    destination: ${MQ_OUTPUT_DESTINATION:twitter}
+  server:
+    type: ${MQ_SERVER_TYPE:rabbitmq}
+    host: ${MQ_SERVER_HOST:localhost}
+    port: ${MQ_SERVER_PORT:5672}
+    user: ${MQ_SERVER_USER:twitter}
+    pass: ${MQ_SERVER_PASS:twitter}

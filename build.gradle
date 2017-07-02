@@ -1,0 +1,88 @@
+buildscript {
+  ext {
+    springBootVersion = '1.5.4.RELEASE'
+    springCloudVersion = 'Dalston.SR1'
+    lombokVersion = '1.16.16'
+    hibernateJpa21Api = '1.0.0.Final'
+  }
+}
+
+plugins {
+  id 'java'
+  id 'idea'
+  id 'eclipse'
+  id 'cn.bestwu.propdeps-idea' version '0.0.10'
+  id 'cn.bestwu.propdeps-eclipse' version '0.0.10'
+  id 'cn.bestwu.propdeps' version '0.0.10' apply false
+  id 'cn.bestwu.propdeps-maven' version '0.0.10' apply false
+  id 'org.springframework.boot' version '1.5.4.RELEASE' apply false
+  id 'io.spring.dependency-management' version '1.0.3.RELEASE' apply false
+}
+
+configure(allprojects) { p ->
+
+  group 'daggerok'
+  version '0.0.1'
+
+  def self = p.toString()
+
+  if (self?.contains('twitter-docker') || p.name.endsWith('modules')) {
+    task clean {
+      doLast {
+        delete p.buildDir
+      }
+    }
+    println "early stopped $self configuration"
+    return
+  }
+
+  apply plugin: 'java'
+
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+
+  repositories {
+    mavenCentral()
+  }
+
+  if (rootProject.name == p.name) {
+    println "early stopped $self configuration"
+    return
+  }
+
+  apply plugin: 'io.spring.dependency-management'
+
+  dependencyManagement {
+    imports {
+      mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+      mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
+    }
+  }
+
+  apply plugin: 'cn.bestwu.propdeps'
+  apply plugin: 'cn.bestwu.propdeps-maven'
+
+  dependencies {
+    compile 'org.springframework.boot:spring-boot-starter',
+        'com.fasterxml.jackson.core:jackson-databind',
+        'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    compileOnly('org.projectlombok:lombok')
+    optional("org.springframework.boot:spring-boot-configuration-processor")
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompileOnly('org.projectlombok:lombok')
+  }
+
+  apply plugin: 'org.springframework.boot'
+
+  springBoot {
+    executable = true
+  }
+
+  def composeUp = tasks.findByPath(':twitter-docker:composeUp')
+
+  [test, build, bootRun].each {
+    it.dependsOn composeUp
+    it.finalizedBy tasks.findByPath(':twitter-docker:composeDown')
+    it.shouldRunAfter clean, assemble, composeUp
+  }
+}

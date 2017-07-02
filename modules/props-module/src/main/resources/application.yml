@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: props-module
+  profiles:
+    include: >
+      props
