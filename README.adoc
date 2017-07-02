@@ -1,4 +1,4 @@
-= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=master["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=async-data-flow-pipeline-messaging-microservices["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
 
 this is repo containing (async `RabbitMQ messaging` and sync `REST` microservices) data models processing:
 

@@ -13,6 +13,7 @@ before_install:
   - sudo kill $(sudo lsof -t -i:5432) | true
   - sudo kill $(sudo lsof -t -i:5672) | true
 script:
+  - gradle clean assemble
   - docker-compose -f twitter-docker/src/docker-compose.yml up -d --build
   - docker-compose -f twitter-docker/src/docker-compose.yml down -v
   - gradle clean build
@@ -44,9 +45,9 @@ script:
   - sudo service twitter-data-app stop
   - sudo service twitter-command-app stop
   - gradle composeDown
-  # twitter apps as linux system services
+  # run bootRun tasks in parallel
   - gradle --parallel bootRun &
-  - sleep 90
+  - sleep 180
 before_cache:
   - gradle composeDown
   - gradle --stop
