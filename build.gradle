@@ -37,6 +37,7 @@ configure(allprojects) { p ->
   }
 
   apply plugin: 'java'
+  apply plugin: 'maven'
 
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
@@ -46,7 +47,7 @@ configure(allprojects) { p ->
   }
 
   if (rootProject.name == p.name) {
-    println "early stopped $self configuration"
+    println "early stopped $self"
     return
   }
 
@@ -78,11 +79,14 @@ configure(allprojects) { p ->
     executable = true
   }
 
-  def composeUp = tasks.findByPath(':twitter-docker:composeUp')
+  def backingServicesUp = ':twitter-docker:twitter-docker-backing-services:backingServicesUp'
+  def backingServicesDown = ':twitter-docker:twitter-docker-backing-services:backingServicesDown'
 
-  [test, build, bootRun].each {
-    it.dependsOn composeUp
-    it.finalizedBy tasks.findByPath(':twitter-docker:composeDown')
-    it.shouldRunAfter clean, assemble, composeUp
+  if (p.name.startsWith('twitter-docker')) return
+
+  [test, build, bootRun].each { task ->
+    task.dependsOn ':assemble', backingServicesUp
+    task.finalizedBy backingServicesDown
+    task.shouldRunAfter clean, ':assemble', backingServicesDown
   }
 }

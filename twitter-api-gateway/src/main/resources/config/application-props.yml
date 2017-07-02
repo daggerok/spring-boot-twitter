@@ -1,0 +1,9 @@
+mq:
+  output:
+    destination: ${MQ_OUTPUT_DESTINATION:twitter}
+  server:
+    type: ${MQ_SERVER_TYPE:rabbitmq}
+    host: ${MQ_SERVER_HOST:localhost}
+    port: ${MQ_SERVER_PORT:5672}
+    user: ${MQ_SERVER_USER:twitter}
+    pass: ${MQ_SERVER_PASS:twitter}

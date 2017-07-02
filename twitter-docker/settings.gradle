@@ -1,0 +1,3 @@
+rootProject.name = 'twitter-docker'
+include 'twitter-docker-backing-services'
+include 'twitter-docker-services'

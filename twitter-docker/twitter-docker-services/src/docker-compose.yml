@@ -1,0 +1,85 @@
+version: "2.1"
+services:
+  pg_sql_db:
+    image: healthcheck/postgres:alpine
+    volumes: ["pg_sql_db_data_volume:/var/lib/postgresql/data:rw"]
+    networks: [backing_services]
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: twitter
+      POSTGRES_USER: twitter
+      POSTGRES_PASSWORD: twitter
+  rabbit_mq:
+    image: rabbitmq:3.6.6-alpine
+    volumes: ["rabbit_mq_data_volume:/var/lib/rabbitmq:rw"]
+    networks: [backing_services]
+    ports: ["5672:5672"]
+    environment:
+      RABBITMQ_DEFAULT_USER: twitter
+      RABBITMQ_DEFAULT_PASS: twitter
+  twitter_data_app:
+    image: openjdk:8u131-jre-alpine
+    depends_on:
+      - pg_sql_db
+      - rabbit_mq
+    networks: [backing_services]
+    ports: ["54321:54321"]
+    volumes:
+      - "twitter_data_app_data_volume:/var/app"
+      - "../../../twitter-data/build/libs/twitter-data-0.0.1.jar:/var/app/app.jar:ro"
+    environment:
+      SERVER_PORT: 54321
+      DB_SERVER_HOST: pg_sql_db
+      MQ_SERVER_HOST: rabbit_mq
+      JAVA_OPTS: " -Xss228k"
+    entrypoint: sh -c "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /var/app/app.jar"
+  twitter_query_app:
+    image: openjdk:8u131-jre-alpine
+    depends_on:
+      - pg_sql_db
+      - twitter_data_app
+    ports: ["8882:8882"]
+    networks: [backing_services]
+    volumes:
+      - "twitter_query_app_data_volume:/var/app"
+      - "../../../twitter-query/build/libs/twitter-query-0.0.1.jar:/var/app/app.jar:ro"
+    environment:
+      DB_SERVER_HOST: pg_sql_db
+      JAVA_OPTS: " -Xss228k"
+    entrypoint: sh -c "sleep 20 && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /var/app/app.jar"
+  twitter_command_app:
+    image: openjdk:8u131-jre-alpine
+    depends_on:
+      - rabbit_mq
+      - twitter_data_app
+    ports: ["8881:8881"]
+    networks: [backing_services]
+    volumes:
+      - "twitter_command_app_data_volume:/var/app"
+      - "../../../twitter-command/build/libs/twitter-command-0.0.1.jar:/var/app/app.jar:ro"
+    environment:
+      MQ_SERVER_HOST: rabbit_mq
+      JAVA_OPTS: ""
+    entrypoint: sh -c "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /var/app/app.jar"
+  twitter_api_gateway_app:
+    image: openjdk:8u131-jre-alpine
+    depends_on: [rabbit_mq]
+    ports: ["8883:8883"]
+    networks: [backing_services]
+    volumes:
+      - "twitter_api_gateway_app_data_volume:/var/app"
+      - "../../../twitter-api-gateway/build/libs/twitter-api-gateway-0.0.1.jar:/var/app/app.jar:ro"
+    environment:
+      MQ_SERVER_HOST: rabbit_mq
+      JAVA_OPTS: " -Xss228k"
+    entrypoint: sh -c "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /var/app/app.jar"
+volumes:
+  pg_sql_db_data_volume: {}
+  rabbit_mq_data_volume: {}
+  twitter_command_app_data_volume: {}
+  twitter_data_app_data_volume: {}
+  twitter_query_app_data_volume: {}
+  twitter_api_gateway_app_data_volume: {}
+networks:
+  backing_services:
+    driver: bridge

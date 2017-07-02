@@ -12,19 +12,39 @@ before_install:
   # kill whatever punning on postgres / rabbitmq port
   - sudo kill $(sudo lsof -t -i:5432) | true
   - sudo kill $(sudo lsof -t -i:5672) | true
+  # gradle
+  - curl -s "https://get.sdkman.io" | bash
+  - mkdir -p "$HOME/.sdkman/etc"
+  - touch "$HOME/.sdkman/etc/config"
+  - sed -i -e 's/^sdkman_auto_answer=false$/sdkman_auto_answer=true/g' "$HOME/.sdkman/etc/config"
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  - sdk use gradle
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
 script:
-  - docker-compose -f twitter-docker/src/docker-compose.yml up -d --build
-  - docker-compose -f twitter-docker/src/docker-compose.yml down -v
-  - gradle clean build
-  - gradle composeUp
-  # twitter apps as linux system services
-  - sudo mkdir -p /var/twitter-{command,data,query}-app
-  - sudo mv -f twitter-command/build/libs/*.jar /var/twitter-command-app/twitter-command-app.jar
-  - sudo mv -f twitter-data/build/libs/*.jar    /var/twitter-data-app/twitter-data-app.jar
-  - sudo mv -f twitter-query/build/libs/*.jar   /var/twitter-query-app/twitter-query-app.jar
+  # package
+  - gradle clean assemble
+  # test docker files
+  - docker-compose -f twitter-docker/twitter-docker-backing-services/src/docker-compose.yml up -d --build
+  - sleep 3
+  - docker-compose -f twitter-docker/twitter-docker-backing-services/src/docker-compose.yml down -v
+  - docker-compose -f twitter-docker/twitter-docker-services/src/docker-compose.yml up -d --build
+  - sleep 3
+  - docker-compose -f twitter-docker/twitter-docker-services/src/docker-compose.yml down -v
+  # compile and test with auto docker bootstrap / tear down
+  - gradle test build
+  # functional testing: twitter apps as linux system services
+  - gradle backingServicesUp
+  - sudo mkdir -p /var/twitter-{api-gateway,command,data,query}-app
+  - sudo cp -Rf twitter-api-gateway/build/libs/*.jar /var/twitter-api-gateway-app/twitter-api-gateway-app.jar
+  - sudo cp -Rf twitter-command/build/libs/*.jar /var/twitter-command-app/twitter-command-app.jar
+  - sudo cp -Rf twitter-data/build/libs/*.jar    /var/twitter-data-app/twitter-data-app.jar
+  - sudo cp -Rf twitter-query/build/libs/*.jar   /var/twitter-query-app/twitter-query-app.jar
+  - sudo ln -s /var/twitter-api-gateway-app/twitter-api-gateway-app.jar /etc/init.d/twitter-api-gateway-app
   - sudo ln -s /var/twitter-command-app/twitter-command-app.jar /etc/init.d/twitter-command-app
   - sudo ln -s /var/twitter-data-app/twitter-data-app.jar       /etc/init.d/twitter-data-app
   - sudo ln -s /var/twitter-query-app/twitter-query-app.jar     /etc/init.d/twitter-query-app
+  - sudo service twitter-api-gateway-app start
+  - sleep 15
   - sudo service twitter-data-app start
   - sleep 15
   - sudo service twitter-command-app start
@@ -43,12 +63,21 @@ script:
   - sudo service twitter-query-app stop
   - sudo service twitter-data-app stop
   - sudo service twitter-command-app stop
-  - gradle composeDown
-  # twitter apps as linux system services
-  - gradle --parallel bootRun &
-  - sleep 90
+  - sudo service twitter-api-gateway-app stop
+  - gradle backingServicesDown
+  # functional testing: bootstrap all twitter apps in docker compose
+  - gradle twitterServicesUp
+  - curl -sS http://localhost:8882 | jq
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test5"}'
+  - sleep 1
+  - curl -sS http://localhost:8882 | jq
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test6"}'
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test7"}'
+  - curl -sS http://localhost:8881 -H'content-type:application/json' -d'{"data":"test8"}'
+  - sleep 1
+  - curl -sS http://localhost:8882 | jq
+  - gradle twitterServicesDown
 before_cache:
-  - gradle composeDown
   - gradle --stop
   - rm -rf $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -rf $HOME/.gradle/caches/*/plugin-resolution/

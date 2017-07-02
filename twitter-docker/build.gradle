@@ -2,16 +2,42 @@ plugins {
   id "com.avast.gradle.docker-compose" version "0.4.3"
 }
 
-// fix windows paths: '\\' -> '/'
-def root = projectDir.absolutePath.replaceAll("\\\\", '/')
+configure(subprojects) { p ->
 
-dockerCompose {
-  useComposeFiles = ["$root/src/docker-compose.yml"]
-  captureContainersOutput = true
-  stopContainers = true
-  removeContainers = true
-  removeImages = "Local"
-  removeVolumes = true
-  removeOrphans = true
-  projectName = "$project.name"
+  // fix windows paths: '\\' -> '/'
+  def root = p.projectDir.absolutePath.replaceAll("\\\\", '/')
+
+  dockerCompose {
+    useComposeFiles = ["$root/src/docker-compose.yml"]
+    captureContainersOutput = true
+    stopContainers = true
+    removeContainers = true
+    removeImages = "Local"
+    removeVolumes = true
+    removeOrphans = true
+    projectName = "$project.name"
+  }
+
+  composeUp.dependsOn ':assemble'
+  composeUp.shouldRunAfter clean, ':clean', ':assemble'
+
+  if (p.name.contains('twitter-docker-backing-services')) {
+
+    task backingServicesUp(dependsOn: composeUp)
+    task backingServicesDown(dependsOn: composeDown)
+  }
+
+  if (p.name.contains('twitter-docker-services')) {
+
+    task twitterServicesUp(dependsOn: composeUp)
+    task twitterServicesDown(dependsOn: composeDown)
+
+    /*
+    tasks.create('twitterServices') { t3 ->
+      t3.shouldRunAfter ':assemble', twitterServicesUp
+      t3.dependsOn ':assemble', twitterServicesUp
+      t3.finalizedBy twitterServicesDown
+    }
+    */
+  }
 }

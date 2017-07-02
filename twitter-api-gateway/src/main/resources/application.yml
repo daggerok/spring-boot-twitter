@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: twitter-api-gateway
+  profiles:
+    include: >
+      twitter,
+      server,
+      props,
+      mq

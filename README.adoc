@@ -1,4 +1,13 @@
-= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=master["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+= spring-boot-twitter image:https://travis-ci.org/daggerok/spring-boot-twitter.svg?branch=twitter-api-gateway["Build Status", link="https://travis-ci.org/daggerok/spring-boot-twitter"]
+
+this repo demonstrate, how to retrieve data using twitter API
+
+. add spring twitter social dependency
+. configure required application properties `application.-twitter.yml`:
+  - `spring.social.twitter.app-id: TODO`
+  - `spring.social.twitter.app-secret: TODO`
+
+== old
 
 this is repo containing (async `RabbitMQ messaging` and sync `REST` microservices) data models processing:
 

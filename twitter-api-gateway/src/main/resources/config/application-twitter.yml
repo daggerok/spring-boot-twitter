@@ -1,0 +1,5 @@
+spring:
+  social:
+    twitter:
+      app-id: TODO
+      app-secret: TODO
