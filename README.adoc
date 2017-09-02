@@ -4,16 +4,7 @@
 
 see: `./twitter-docker/twitter-docker-services/src/docker-compose.yml`
 
-this repo demonstrate, how to retrieve data using twitter API
-
-. add spring twitter social dependency
-. configure required application properties `application.-twitter.yml`:
-  - `spring.social.twitter.app-id: TODO`
-  - `spring.social.twitter.app-secret: TODO`
-
-== old
-
-this is repo containing (async `RabbitMQ messaging` and sync `REST` microservices) data models processing:
+this repo demonstrate CQRS data transfer in REST API and messaging microservices. it's containing (async `RabbitMQ messaging` and sync `REST` microservices) data models processing:
 
 . main idea here is: each microservice doing single simple job, but doing it well, efficient and fast
 . actor 1: `twitter-data` - single service which is listenning creation entity command (event) and store input data into RDBMS (Postgre SQL)
